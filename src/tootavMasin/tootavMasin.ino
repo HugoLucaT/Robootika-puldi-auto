@@ -8,6 +8,7 @@
 #include <WiFiS3.h>
 #include <aWOT.h>
 
+#define collision 2
 #define speedPinR 9
 #define RightMotorDirPin1  12
 #define RightMotorDirPin2  11
@@ -93,7 +94,7 @@ void frontPage(Request &req, Response &res) {
   res.println("<form action='/d' method='post'><button type='submit'>Down</button></form>");
   res.println("<form action='/stop' method='post'><button type='submit'>Stop</button></form>");
   res.println("<label>Speed:</label>");
-  res.println("<input type='range' id='speedSlider' min='0' max='255' value='200' oninput='this.nextElementSibling.value=this.value'>");
+  res.println("<input type='range' id='speedSlider' min='100' max='255' value='200' oninput='this.nextElementSibling.value=this.value'>");
   res.println("<output>200</output>");
   res.println("<button type='button' onclick='setSpeed()'>Set Speed</button>");
 
@@ -162,6 +163,7 @@ void init_GPIO()
 // 6) setup/loop
 void setup() {
   init_GPIO();
+  pinMode(collision,INPUT_PULLUP);
   Serial.begin(9600);
   Serial.println("Käivitan Wi-Fi AP...");
   int tulemus = WiFi.beginAP(WIFI_NIMI, WIFI_PAROOL);
@@ -183,6 +185,9 @@ void setup() {
 
 
 void loop() {
+  if(!digitalRead(collision)){
+    stop_Stop();
+  }
   WiFiClient klient = server.available();
   if (!klient) return;
   app.process(&klient);
