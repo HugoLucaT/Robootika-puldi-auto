@@ -28,16 +28,25 @@ Application app;
 
 // 3) Riistvarafunktsioonid
 int speed = 200;
+struct RobotOrder {
+    int command;
+    unsigned long time;
+};
 
-void go_Advance(void) //Edasi
+int maxCommands = 50;
+RobotOrder home[20];
+int homeCount = 0;
+unsigned long lastTime = 0; 
+
+void go_Advance(int t=0) //Edasi
 {
-  Serial.print(speed);
   digitalWrite(RightMotorDirPin1, HIGH);
   digitalWrite(RightMotorDirPin2,LOW);
   digitalWrite(LeftMotorDirPin1,HIGH);
   digitalWrite(LeftMotorDirPin2,LOW);
   analogWrite(speedPinL, speed);
   analogWrite(speedPinR, speed);
+  delay(t);
 }
 void go_Left(int t=0)  //Pööra vasakule
 {
@@ -69,7 +78,7 @@ void go_Back(int t=0)  //Tagurda
   analogWrite(speedPinR, speed);
   delay(t);
 }
-void stop_Stop() //Peatu
+void stop_Stop(int t=0) //Peatu
 {
   digitalWrite(RightMotorDirPin1, LOW);
   digitalWrite(RightMotorDirPin2, LOW);
@@ -77,6 +86,26 @@ void stop_Stop() //Peatu
   digitalWrite(LeftMotorDirPin2, LOW);
   analogWrite(speedPinL, speed);
   analogWrite(speedPinR, speed);
+  delay(t);
+}
+
+// Koju minemise funktsioon
+void pushCommand(int cmd) {
+  if (homeCount < maxCommands) {
+    unsigned long now = millis();
+    unsigned long dt = now - lastTime;
+
+    if (homeCount == 0) {
+      lastTime = now;
+    } else {
+      home[homeCount - 1].time = dt;
+    }
+
+    home[homeCount].command = cmd;
+
+    lastTime = now;
+    homeCount++;
+  }
 }
 
 // 4) Esileht – kolm vormi-nuppu (POST)
@@ -94,7 +123,7 @@ void frontPage(Request &req, Response &res) {
   res.println("<form action='/d' method='post'><button type='submit'>Down</button></form>");
   res.println("<form action='/stop' method='post'><button type='submit'>Stop</button></form>");
   res.println("<label>Speed:</label>");
-  res.println("<input type='range' id='speedSlider' min='100' max='255' value='200' oninput='this.nextElementSibling.value=this.value'>");
+  res.println("<input type='range' id='speedSlider' min='100' max='255' value='"+ String(speed)+ "' oninput='this.nextElementSibling.value=this.value'>");
   res.println("<output>200</output>");
   res.println("<button type='button' onclick='setSpeed()'>Set Speed</button>");
 
@@ -104,6 +133,8 @@ void frontPage(Request &req, Response &res) {
   res.println("  fetch('/speed/' + val);");
   res.println("}");
   res.println("</script>");
+  res.println("<form action='/resetHome' method='post'><button type='submit'>Reset Home</button></form>");
+  res.println("<form action='/home' method='post'><button type='submit'>Go back to home</button></form>");
   res.println("</html>");
 
   
@@ -120,34 +151,77 @@ void redirectHome(Response &res) {
 
 void up(Request &req, Response &res) {
   go_Advance();
+  pushCommand(1);
   redirectHome(res);
 }
 void left(Request &req, Response &res) {
   go_Left();
+  pushCommand(2);
   redirectHome(res);
 }
 void right(Request &req, Response &res) {
   go_Right();
+  pushCommand(3);
   redirectHome(res);
 }
 void back(Request &req, Response &res) {
   go_Back();
+  pushCommand(4);
   redirectHome(res);
 }
 void stop(Request &req, Response &res) {
   stop_Stop();
+  pushCommand(5);
   redirectHome(res);
 }
+
 void setSpeed(Request &req, Response &res) {
-  Serial.print("11");
   char value[8];
 
   if(req.route("value", value, sizeof(value))){
     speed = atoi(value);
-  }
 
+    analogWrite(speedPinL, speed);
+    analogWrite(speedPinR, speed);
+  }
   redirectHome(res);
 }
+
+void resetHome(Request &req, Response &res){
+  homeCount = 0;
+  redirectHome(res);
+}
+
+void returnHome(Request &req, Response &res){
+  pushCommand(5);
+  for (int i = homeCount; i >= 0; i--) {
+    switch (home[i].command){
+      case 1:
+        go_Back(home[i].time);
+        Serial.print("End of back");
+        break;
+      case 2:
+        go_Right(home[i].time);
+        Serial.print("End of right");
+        break;
+      case 3:
+        go_Left(home[i].time);
+        Serial.print("End of left");
+        break;
+      case 4:
+        go_Advance(home[i].time);
+        Serial.print("End of foward");
+        break;
+      case 5:
+        stop_Stop(100);
+        break;
+    }
+  }
+  stop_Stop();
+  homeCount = 0;
+  redirectHome(res);
+}
+
 void init_GPIO()
 {
 	pinMode(RightMotorDirPin1, OUTPUT); 
@@ -177,6 +251,8 @@ void setup() {
   app.post("/d", back);
   app.post("/stop", stop);
   app.get("/speed/:value", setSpeed);
+  app.post("/resetHome", resetHome);
+  app.post("/home", returnHome);
 
 
   server.begin();
