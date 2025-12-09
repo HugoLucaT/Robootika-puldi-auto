@@ -11,7 +11,7 @@ Süsteemi põhifunktsioonid:
 - "Go back home" funktsioon – auto suudab samm-sammult tagasi liikuda mööda sama teekonda, mida kasutaja eelnevalt manuaalselt läbis.
 
 ## 2. Sisendite loetelu
-2.1 Kasutaja veebi kaudu tehtavad sisendid
+### Kasutaja veebi kaudu tehtavad sisendid
 - Nupp “Up” → POST /u → alustab edasi liikumist
 - Nupp “Down” → POST /d → alustab tagurdamist
 - Nupp “Left” → POST /l → pöörab vasakule
@@ -21,38 +21,46 @@ Süsteemi põhifunktsioonid:
 - “Reset Home” → POST /resetHome → puhastab salvestatud liikumiskäsud
 - “Go back to home” → POST /home → sõidab sama teed tagasi alguspunkti
 
-2.2 Riistvaralised sisendid
+### Riistvaralised sisendid
 - Kokkupõrkeandur (collision sensor)
+
 Füüsiline sisend: takistuslüliti / bumper switch
+
 Arduino sisend: digipin 2
+
 Funktsioon: kui tuvastab kokkupõrke → auto peatub automaatselt
 
 ## 3. Väljundite loetelu
 Mootorid liiguvad edasi → DC mootorid (PWM kiiruse juhtimine)
+
 Mootorid pööravad vasakule/paremale → vasaku/parema mootori suud pööratakse ümber
+
 Auto tagurdab → mõlema mootori suund pööratakse ümber
+
 Auto peatub → mootoritele antakse 0 signaal
+
 Kiiruse muutus → PWM signaal mootoritele (speedPinL, speedPinR)
+
 “Go Home” funktsioon → auto mängib tagurpidi läbi kõik kasutaja käsud koos sama ajastusega
 
 ## 4. Nõuded loodavale seadmele
-Liikumine
+### Liikumine
 - Kui vajutatakse "Up", siis autod sõidab edasi seni, kuni vajutatakse mõnd muud nuppu.
 - Kui vajutatakse "Down", auto liigub tagurpidi.
 - Kui vajutatakse "Left", auto pöörab vasakule (parem mootor edasi, vasak mootor tagasi).
 - Kui vajutatakse "Right", auto pöörab paremale.
 - Kui vajutatakse "Stop", auto peatub koheselt.
 
-Kiirus
+### Kiirus
 Kui kasutaja muudab speed slider väärtust, siis:
 - PWM väärtus seatakse uueks kiiruseks (100–255) muudatus rakendub kohe liikumisele.
 
-Kokkupõrkeanduri loogika
+### Kokkupõrkeanduri loogika
 Kui collision sensor aktiveerub, siis:
 - auto peatub automaatselt
 - liikumist ei jätkata enne, kui kasutaja vajutab uut nuppu
 
-Liikumise mälufunktsioon (Home)
+### Liikumise mälufunktsioon (Home)
 Iga liikumiskäsk salvestatakse järjekorda koos ajastusega.
 Kui vajutatakse “Go back to home”, siis:
 - auto lõpetab praeguse liikumise;
