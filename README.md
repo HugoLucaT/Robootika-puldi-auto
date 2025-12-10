@@ -1,5 +1,7 @@
 # WiFi-puldiauto
-Projekti kirjeldus docs kaustas.
+Masina juhtimiseks ühendada seade "Puldiauto" wifi võrguga ning minna veeblehitsejal aadressile 
+
+Projekti üldine kirjeldus docs kaustas.
 
 - Ülikool: Tallinn Ülikool
 - Õppeaine: IFI6203.DT Robootika
