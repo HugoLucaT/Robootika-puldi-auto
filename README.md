@@ -1,5 +1,7 @@
 # WiFi-puldiauto
-Masina juhtimiseks ühendada seade "Puldiauto" wifi võrguga ning minna veeblehitsejal aadressile 
+Masin panna kokku vastavalt Hardware kaustas olevatele juhistele.
+Laadida läbi usb Arduinole src/tootavMasin/tootavMasin.ino kood ning lülitada sisse vooluallikas.
+Masina juhtimiseks ühendada seade "Puldiauto" wifi võrguga ning minna veeblehitsejal aadressile. 
 
 Projekti üldine kirjeldus docs kaustas.
 
