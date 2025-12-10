@@ -213,7 +213,7 @@ void returnHome(Request &req, Response &res){
         Serial.print("End of foward");
         break;
       case 5:
-        stop_Stop(100);
+        stop_Stop(1000);
         break;
     }
   }
