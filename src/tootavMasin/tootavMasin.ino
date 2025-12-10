@@ -119,7 +119,9 @@ void frontPage(Request &req, Response &res) {
   res.println("<h1>Puldi auto</h1>");
   res.println("<form action='/u' method='post'><button type='submit'>Up</button></form>");
   res.println("<form action='/l' method='post'><button type='submit'>Left</button></form>");
+  res.println("<form action='/lsmall' method='post'><button type='submit'>Small Left</button></form>");
   res.println("<form action='/r' method='post'><button type='submit'>Right</button></form>");
+  res.println("<form action='/rsmall' method='post'><button type='submit'>Small Right</button></form>");
   res.println("<form action='/d' method='post'><button type='submit'>Down</button></form>");
   res.println("<form action='/stop' method='post'><button type='submit'>Stop</button></form>");
   res.println("<label>Speed:</label>");
@@ -162,6 +164,22 @@ void left(Request &req, Response &res) {
 void right(Request &req, Response &res) {
   go_Right();
   pushCommand(3);
+  redirectHome(res);
+}
+void small_left(Request &req, Response &res) {
+  go_Left();
+  pushCommand(2);
+  delay(200);
+  stop_Stop();
+  pushCommand(5);
+  redirectHome(res);
+}
+void small_right(Request &req, Response &res) {
+  go_Right();
+  pushCommand(3);
+  delay(200);
+  stop_Stop();
+  pushCommand(5);
   redirectHome(res);
 }
 void back(Request &req, Response &res) {
@@ -247,7 +265,9 @@ void setup() {
   app.get("/",  frontPage);
   app.post("/u", up);
   app.post("/l", left);
+  app.post("/lsmall", small_left);
   app.post("/r", right);
+  app.post("/rsmall", small_right);
   app.post("/d", back);
   app.post("/stop", stop);
   app.get("/speed/:value", setSpeed);
