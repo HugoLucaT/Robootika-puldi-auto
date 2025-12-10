@@ -1,101 +1,96 @@
 # Projekti dokumentatsioon
 
 ## 1. Projekti eesmärk ja seadme lühikirjeldus
-**Mis asi see on, mida ja miks me teeme? Millist praktilist probleemi see lahendab?**
+Projekti eesmärk on luua väikene autonoomne puldiauto, mida saab juhtida täielikult veebilehitseja kaudu. Auto tekitab ise Wi-Fi tugijaama (AP-režiim), kuhu kasutaja saab telefonist või arvutist ühenduda. See lahendab olukorra, kus pole vaja eraldi füüsilist pulti ega Bluetooth-rakendust – piisab vaid veebilehitsejast, mis töötab kõigis seadmetes.
 
-Näide stiilist:
-- Meie projekti eesmärk on luua ventilaator, mida saab juhtida infrapuna puldiga.
-- Seadet saab kasutada näiteks ruumi jahutamiseks olukorras, kus käega lülitile ulatamine on ebamugav.
-- Peamised komponendid: elektrimootor, servo, ventilaatori labad (3D prinditud), Arduino mikrokontroller.
-
-👉 _Asenda see kirjeldus enda seadme kirjeldusega._
-
----
+Süsteemi põhifunktsioonid:
+- auto edasi-tagasi liikumine;
+- pööramine vasakule ja paremale;
+- kiiruse reguleerimine (PWM);
+- STOP nupp;
+- "Go back home" funktsioon – auto suudab samm-sammult tagasi liikuda mööda sama teekonda, mida kasutaja eelnevalt manuaalselt läbis.
 
 ## 2. Sisendite loetelu
-**Millised on süsteemi poolt loetavad / mõõdetavad sisendid? Millega neid mõõdetakse / tuvastatakse?**
+### Kasutaja veebi kaudu tehtavad sisendid
+- Nupp “Up” → POST /u → alustab edasi liikumist
+- Nupp “Down” → POST /d → alustab tagurdamist
+- Nupp “Left” → POST /l → pöörab vasakule
+- Nupp “Right” → POST /r → pöörab paremale
+- Nupp “Stop” → POST /stop → peatab auto
+- Kiiruse liugur (speed slider) → GET /speed/:value → muudab PWM mootori kiirust
+- “Reset Home” → POST /resetHome → puhastab salvestatud liikumiskäsud
+- “Go back to home” → POST /home → sõidab sama teed tagasi alguspunkti
 
-Kirjelda kõik sisendid eraldi punktidena.  
-Näited (asenda enda projektiga):
+### Riistvaralised sisendid
+- Kokkupõrkeandur (collision sensor)
 
-- Nupp "vasakule" puldil → IR-sensor loeb signaali
-- Nupp "paremale" puldil → IR-sensor loeb signaali
-- Nupp "+" puldil → IR-sensor loeb signaali (tõsta kiirust)
-- Nupp "-" puldil → IR-sensor loeb signaali (vähenda kiirust)
-- ON/OFF nupp → IR-sensor loeb signaali
+Füüsiline sisend: takistuslüliti / bumper switch
 
-👉 _Kui sinu süsteem kasutab muid sensoreid (ultraheli, temperatuuriandur, valgusandur, joystick, BLE telefonis vms), kirjelda need siin koos füüsilise sisendi allikaga._
+Arduino sisend: digipin 2
 
----
+Funktsioon: kui tuvastab kokkupõrke → auto peatub automaatselt
 
 ## 3. Väljundite loetelu
-**Mida süsteem teeb / muudab? Millega väljund realiseeritakse?**
+Mootorid liiguvad edasi → DC mootorid (PWM kiiruse juhtimine)
 
-Näited (asenda enda projektiga):
-- Ventilaator pöörleb kiiremini / aeglasemalt → DC mootor
-- Ventilaator suunab õhu vasakule / paremale → servo
-- LED süttib / kustub → LED
-- Ekraanile kuvatakse temperatuur → OLED ekraan
+Mootorid pööravad vasakule/paremale → vasaku/parema mootori suud pööratakse ümber
 
----
+Auto tagurdab → mõlema mootori suund pööratakse ümber
+
+Auto peatub → mootoritele antakse 0 signaal
+
+Kiiruse muutus → PWM signaal mootoritele (speedPinL, speedPinR)
+
+“Go Home” funktsioon → auto mängib tagurpidi läbi kõik kasutaja käsud koos sama ajastusega
 
 ## 4. Nõuded loodavale seadmele
-**Mis peab toimuma, kui kasutaja teeb mingi toimingu? Kirjelda käitumisloogika.**
+### Liikumine
+- Kui vajutatakse "Up", siis autod sõidab edasi seni, kuni vajutatakse mõnd muud nuppu.
+- Kui vajutatakse "Down", auto liigub tagurpidi.
+- Kui vajutatakse "Left", auto pöörab vasakule (parem mootor edasi, vasak mootor tagasi).
+- Kui vajutatakse "Right", auto pöörab paremale.
+- Kui vajutatakse "Stop", auto peatub koheselt.
 
-Kirjuta reeglid kujul "Kui X, siis Y".  
-Näited (kohanda enda projektile):
+### Kiirus
+Kui kasutaja muudab speed slider väärtust, siis:
+- PWM väärtus seatakse uueks kiiruseks (100–255) muudatus rakendub kohe liikumisele.
 
-- Kui vajutatakse ON/OFF nuppu, siis:
-  - kui ventilaator on väljas → ventilaator lülitub sisse keskmise kiirusega;
-  - kui ventilaator töötab → ventilaator pöördub keskasendisse ja lülitub välja.
+### Kokkupõrkeanduri loogika
+Kui collision sensor aktiveerub, siis:
+- auto peatub automaatselt
+- liikumist ei jätkata enne, kui kasutaja vajutab uut nuppu
 
-- Kui vajutatakse vasak/noole nuppu, liigub ventilaatori pea iga vajutusega X kraadi vasakule, kuni vasak piir on käes. Kui piir käes, siis rohkem ei liigu.
+### Liikumise mälufunktsioon (Home)
+Iga liikumiskäsk salvestatakse järjekorda koos ajastusega.
+Kui vajutatakse “Go back to home”, siis:
+- auto lõpetab praeguse liikumise;
+- auto kordab käske vastupidises järjekorras;
+- iga liigutus kestab sama kaua kui algselt;
+- suunad on vastupidised (edasi → tagasi, vasak → parem jne).
 
-- Kui ventilaator töötab maksimumkiirusel ja vajutatakse "+" → kiirus ei suurene enam.
-
-👉 _Pane siia KÕIK kokkulepitud reeglid. Need reeglid on alus, mille järgi hiljem hinnatakse, kas teie lahendus vastab eesmärgile._
-
----
+Kui vajutatakse “Reset Home”, kustutatakse kogu salvestatud liikumisajalugu.
 
 ## 5. Süsteemi füüsiliste komponentide loetelu
-**Millest seade koosneb? Lisa lingid või täpsed nimed, et keegi teine saaks sama asja uuesti osta / teha.**
-
-Tabelina või punktidena. Nt:
-
-- Arduino Uno (mikrokontroller)
-- IR-vastuvõtja + pult (tüüp: XY123)  
-- Väike elektrimootor (DC, ___ V)
-- Mootoridraiver (L298N vms)
-- Servo (mudel: SG90 / MG90S / muu)
-- 3D-prinditud ventilaatori labad (STL-failid lisage kataloogi `hardware/`)
-- Toiteallikas (___ V / ___ A)
-
-👉 _Kui ise tegite 3D mudeli, lisage STL või Fusion faili `hardware/` alla. Kui kasutasite netist leitud mudelit, märkige allikas._
-
----
+- Mikrokontroller: Arduino Uno R4 Wifi
+- Toiteplokk / aku: 2x 3.7v 18650
+- Mootor / servo / aktuaatorid: 4x OSOYOO BasicMover DC motor
+- Nuppud: 2x microswitch
+- Draiverplaadid / moodulid: OSOYOO model X motor driver module
+- Kinnitused ja mehhaanika: Upper Chassis for V2.0 OSOYOO Robot Car, Lower car chassis for OSOYOO V2.1 robot car
+- 21 juhet
+- 4 ratast
 
 ## 6. Ühendusskeem
-**Kuidas kõik osad on omavahel ühendatud?**
+/hardware/scheme.fzz
+<img width="1235" height="737" alt="image" src="https://github.com/user-attachments/assets/d2fd3f31-e03e-4496-bfc1-15e831f0f33f" />
 
-- Lisa siia pilt või skeemi kirjeldus.
-- Fail `hardware/wiring-diagram.png` peab näitama vähemalt:
-  - milline pin Arduinol läheb millise komponendi sisendisse,
-  - kuidas on toide ühendatud.
-
-Kui skeemi pole veel joonistatud, siis vähemalt kirjelda tekstina, nt:
-
-- IR-sensor OUT → Arduino digipin 7  
-- Servo signaal → Arduino digipin 6  
-- Mootoridraiveri IN1 → Arduino digipin 2  
-- Mootoridraiveri IN2 → Arduino digipin 3  
-- Mootoridraiveri ENA → Arduino pin 5 (PWM)  
-- GND kõik ühises massis
-
-👉 _Skeem peab lõpuks olemas olema, mitte ainult tekst._
-
----
 
 ## 7. Süsteemi juhtiv kood (või pseudokood)
-**Kirjelda programmi loogikat nii, et seda on võimalik aru saada ka hiljem.**  
-Kui kood töötab, pane siia lühike selgitus + viide failile `src/projektinimi.ino`.  
-Kui kood pole veel valmis, lisa siia pseudokood.
+Koodi põhiloogika:
+- Arduino loob Wi-Fi AP võrgu nimega "Puldiauto".
+- aWOT veebiserver kuulab pordil 80.
+- Avaleht näitab HTML nuppe: Up, Down, Left, Right, Stop, Speed, Home.
+- Iga POST-päring vallandab vastava funktsiooni (go_Advance, go_Left jne).
+- Kiiruse muutmine toimub REST stiilis päringuga /speed/:value.
+- Kõik liikumiskäsud salvestatakse massiivi home[] koos kestusega.
+- Home funktsioon mängib käsud vastupidises järjekorras tagasi.
