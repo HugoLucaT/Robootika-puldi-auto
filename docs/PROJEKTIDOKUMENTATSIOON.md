@@ -82,6 +82,8 @@ Kui vajutatakse “Reset Home”, kustutatakse kogu salvestatud liikumisajalugu.
 
 ## 6. Ühendusskeem
 /hardware/scheme.fzz
+<img width="1235" height="737" alt="image" src="https://github.com/user-attachments/assets/d2fd3f31-e03e-4496-bfc1-15e831f0f33f" />
+
 
 ## 7. Süsteemi juhtiv kood (või pseudokood)
 Koodi põhiloogika:
